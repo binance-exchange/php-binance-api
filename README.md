@@ -28,6 +28,8 @@ If the above step didn't work, install composer and try again.
 sudo apt-get install curl
 curl -s http://getcomposer.org/installer | php
 php composer.phar install
+
+sudo apt-get install php-curl
 ```
 Composer not found? Use this command instead:
 ```
