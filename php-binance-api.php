@@ -1066,6 +1066,65 @@ class API
         return $json;
     }
 
+    /** 
+     * Places an OCO trade, which consists in two legs or orders.
+     * @param $side string
+     * @param $symbol string 
+     * @param $quantity string
+     * @param $price string
+     * @param $stopPrice string
+     * @param $flags array
+     * @param $test bool
+     * @return array containing the response
+     * @throws \Exception
+     */
+    public function OCOorder(string $side, string $symbol, $quantity, $price, $stopPrice, array $flags = [], bool $test = false) {
+        
+        $opt = [
+            "side"                  => $side,
+            "symbol"                => $symbol,
+            "quantity"              => $quantity,
+            "price"                 => $price,      // take profit Limit price.
+            "stopPrice"             => $stopPrice,  // stop loss market price.
+            "recvWindow"            => 60000,
+        ];
+        
+        if (isset($flags['stopLimitPrice'])) {
+            $opt['stopLimitPrice'] = $flags['stopLimitPrice'];
+            $opt['stopLimitTimeInForce']  = "GTC";              // `Good 'till cancel`. Needed if flag `stopLimitPrice` used.
+        }
+
+        // someone has preformated there 8 decimal point double already
+        // dont do anything, leave them do whatever they want.
+        if (gettype($price) !== "string") {
+            // for every other type, lets format it appropriately
+            $price = number_format($price, 8, '.', '');
+        }
+
+        if (is_numeric($quantity) === false) {
+            // WPCS: XSS OK.
+            echo "warning: quantity expected numeric got " . gettype($quantity) . PHP_EOL;
+        }
+
+        if (is_string($price) === false) {
+            // WPCS: XSS OK.
+            echo "warning: price expected string got " . gettype($price) . PHP_EOL;
+        }
+
+        if (isset($flags['icebergQty'])) {
+            $opt['icebergQty'] = $flags['icebergQty'];
+        }
+
+        if (isset($flags['newOrderRespType'])) {
+            $opt['newOrderRespType'] = $flags['newOrderRespType'];
+        }
+        
+        $qstring = ($test === false) ? "v3/order/oco" : "v3/we-dont-know-the-test-endpoint";
+        return $this->httpRequest($qstring, "POST", $opt, true);
+    }
+
+
+
     /**
      * order formats the orders before sending them to the curl wrapper function
      * You can call this function directly or use the helper functions
